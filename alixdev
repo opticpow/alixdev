@@ -23,6 +23,10 @@ mklink()
 
 case $1 in
 	get)
+        if [ ! -d src ]
+        then
+            mkdir src
+        fi
 		cd src
 		wget http://buildroot.uclibc.org/downloads/buildroot-${BUILDROOTVER}.tar.bz2
 		;;
