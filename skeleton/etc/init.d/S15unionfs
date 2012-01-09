@@ -1,0 +1,50 @@
+#! /bin/sh
+#
+# System-V init script for unionfs
+#
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DESC="union filesystems"
+NAME=unionfs
+
+MOUNT=/mnt/cf
+ETCFS=${MOUNT}/etc.tar
+
+
+# Read config file if it is present.
+if [ -r /etc/default/$NAME ]
+then
+	. /etc/default/$NAME
+fi
+
+case "$1" in
+  start)
+	mount /mnt/cf
+	if [ -f $ETCFS ] ; then
+		echo -n "Restoring /etc from CF..."
+		cd /
+		tar xf $ETCFS
+		mount -t unionfs -o dirs=/root/.etc=rw:/etc=ro none /etc
+		echo "Done"
+	else
+		echo "ERROR: /etc save file not found on CF"
+	fi
+	;;
+
+  save) echo -n "Saving /etc to CF..."
+	cd /
+	tar cf $ETCFS /root/.etc
+	cd -
+	;;
+
+  stop) $0 save
+	umount /etc
+	umount /mnt/cf
+	;;
+
+  *) echo "Usage: $SCRIPTNAME {start|stop|save}" >&2
+	exit 1
+	;;
+esac
+
+exit 0
