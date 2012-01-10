@@ -3,8 +3,9 @@
 ROOTDIR=${PWD}
 
 BUILDROOTVER=2011.05
-KERNELVER=2.6.38.7
+KERNELVER=2.6.39.4
 UNIONFSVER=2.5.10
+UNIONFSPATCH=unionfs-${UNIONFSVER}_for_${KERNELVER}.diff
 BUILDROOTSRC=${ROOTDIR}/src/buildroot-${BUILDROOTVER}.tar.bz2
 
 checklink()
@@ -21,6 +22,25 @@ mklink()
 	ln -s buildroot-${BUILDROOTVER} buildroot
 }
 
+makecf()
+{
+    mkdir vm > /dev/null 2>&1
+    qemu-img create -f raw vm/cf.img 32M
+    losetup /dev/loop0 vm/cf.img
+    echo -e  "n\np\n1\n1\n\nt\n6\na\n1\nw\n" | fdisk /dev/loop0
+    losetup -d /dev/loop0
+    losetup -o 512 /dev/loop0 vm/cf.img
+    mkfs -t msdos /dev/loop0
+    syslinux --install /dev/loop0
+    mkdir vm/mnt
+    sudo mount -t msdos /dev/loop0 vm/mnt
+    sudo cp cf/* vm/mnt/
+    sudo umount /dev/loop0
+    losetup -d /dev/loop0
+    rm -rf vm/mnt/
+}
+
+
 case $1 in
 	get)
         if [ ! -d src ]
@@ -29,6 +49,8 @@ case $1 in
         fi
 		cd src
 		wget http://buildroot.uclibc.org/downloads/buildroot-${BUILDROOTVER}.tar.bz2
+        wget http://download.filesystems.org/unionfs/unionfs-2.x-latest/${UNIONFSPATCH}.gz
+        gunzip ${UNIONFSPATCH}.gz
 		;;
 	checklink)
 		checklink
@@ -65,9 +87,18 @@ case $1 in
 		let ver+=1
 		echo -e "\nALIXDEV Build ${ver}\n" > skeleton/etc/issue
 		echo $ver > buildver
+        if [ ! -f ${ROOTDIR}/buildroot/.config ]
+        then
+            echo "Config not found, will copy..."
+            $0 cpconfig
+        fi
 		(cd buildroot ; make all | tee ../build.log)
 		;;
 	runvm)
+        if [ ! -f vm/cf.img ]
+        then
+            makecf
+        fi
 		IMAGES=${ROOTDIR}/buildroot/output/images
 		qemu -cpu pentium -kernel ${IMAGES}/bzImage -initrd ${IMAGES}/rootfs.initramfs -serial stdio -net nic,vlan=1 -net user,vlan=1 -hda ${ROOTDIR}/vm/cf.img
 		;;

@@ -1,2 +1,4 @@
 src/
+tmp/
 buildroot*
+build.log
