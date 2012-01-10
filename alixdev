@@ -43,14 +43,17 @@ makecf()
 
 case $1 in
 	get)
-        if [ ! -d src ]
-        then
-            mkdir src
-        fi
-		cd src
-		wget http://buildroot.uclibc.org/downloads/buildroot-${BUILDROOTVER}.tar.bz2
-        wget http://download.filesystems.org/unionfs/unionfs-2.x-latest/${UNIONFSPATCH}.gz
-        gunzip ${UNIONFSPATCH}.gz
+        	if [ ! -d src ]
+        	then
+            		mkdir src
+        	fi
+		if [ ! -f src/buildroot-${BUILDROOTVER}.tar.bz2 ]
+		then
+			cd src
+			wget http://buildroot.uclibc.org/downloads/buildroot-${BUILDROOTVER}.tar.bz2
+		fi
+        	wget http://download.filesystems.org/unionfs/unionfs-2.x-latest/${UNIONFSPATCH}.gz
+        	gunzip ${UNIONFSPATCH}.gz
 		;;
 	checklink)
 		checklink
