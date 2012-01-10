@@ -52,6 +52,7 @@ case $1 in
 			cd src
 			wget http://buildroot.uclibc.org/downloads/buildroot-${BUILDROOTVER}.tar.bz2
 		fi
+            cd src
         	wget http://download.filesystems.org/unionfs/unionfs-2.x-latest/${UNIONFSPATCH}.gz
         	gunzip ${UNIONFSPATCH}.gz
 		;;
