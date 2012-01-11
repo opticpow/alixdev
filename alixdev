@@ -14,6 +14,18 @@ BUILDROOTSRC=${ROOTDIR}/src/buildroot-${BUILDROOTVER}.tar.bz2
 IMAGES=${ROOTDIR}/buildroot/output/images
 TMPDIR=${ROOTDIR}/tmp
 
+printconf()
+{
+    echo -e "\nALIXDEV"
+    echo -e "------------------------\n"
+    echo Build:     ${VERSION}
+    echo Buildroot: ${BUILDROOTVER}
+    echo Kernel:    ${KERNELVER}
+    echo UnionFS:   ${UNIONFSVER}
+    echo -e "\n"
+
+}
+
 checklink()
 {
 	if [ ! -h ${ROOTDIR}/buildroot ]
@@ -30,20 +42,20 @@ mklink()
 
 makecf()
 {
-    mkdir vm > /dev/null 2>&1
-    qemu-img create -f raw vm/cf.img 32M
-    losetup /dev/loop0 vm/cf.img
+    mkdir -p ${TMPDIR} > /dev/null
+    qemu-img create -f raw ${TMPDIR}/cf.img 32M
+    losetup /dev/loop0 ${TMPDIR}/cf.img
     echo -e  "n\np\n1\n1\n\nt\n6\na\n1\nw\n" | fdisk /dev/loop0
     losetup -d /dev/loop0
-    losetup -o 512 /dev/loop0 vm/cf.img
+    losetup -o 512 /dev/loop0 ${TMPDIR}/cf.img
     mkfs -t msdos /dev/loop0
     syslinux --install /dev/loop0
-    mkdir vm/mnt
-    sudo mount -t msdos /dev/loop0 vm/mnt
-    sudo cp cf/* vm/mnt/
+    mkdir ${TMPDIR}/mnt
+    sudo mount -t msdos /dev/loop0 ${TMPDIR}/mnt
+    sudo cp cf/* ${TMPDIR}/mnt/
     sudo umount /dev/loop0
     losetup -d /dev/loop0
-    rm -rf vm/mnt/
+    rm -rf ${TMPDIR}/mnt/
 }
 
 makefw()
@@ -62,6 +74,9 @@ makefw()
 }
 
 case $1 in
+    version)
+        printconf
+        ;;
 	get)
         	if [ ! -d src ]
         	then
