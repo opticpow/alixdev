@@ -4,26 +4,33 @@
 BUILDROOTVER=2011.05
 KERNELVER=2.6.39.4
 UNIONFSVER=2.5.10
+PACKAGES=heyu
 
 
 # Helper Vars
-VERSION=`cat buildver`
+TAGMAJOR=`cat .tag.major`
+TAGMINOR=`cat .tag.minor`
+BUILD=`cat .build`
+TAG=v${TAGMAJOR}.${TAGMINOR}
 ROOTDIR=${PWD}
 UNIONFSPATCH=unionfs-${UNIONFSVER}_for_${KERNELVER}.diff
 BUILDROOTSRC=${ROOTDIR}/src/buildroot-${BUILDROOTVER}.tar.bz2
 IMAGES=${ROOTDIR}/buildroot/output/images
 TMPDIR=${ROOTDIR}/tmp
+SRCDIR=${ROOTDIR}/src
+CFGDIR=${ROOTDIR}/config
+PKGDIR=${ROOTDIR}/custom
 
 printconf()
 {
     echo -e "\nALIXDEV"
     echo -e "------------------------\n"
     echo Build:     ${VERSION}
+    echo Tag:       ${TAG}
     echo Buildroot: ${BUILDROOTVER}
     echo Kernel:    ${KERNELVER}
     echo UnionFS:   ${UNIONFSVER}
     echo -e "\n"
-
 }
 
 checklink()
@@ -78,48 +85,35 @@ case $1 in
         printconf
         ;;
 	get)
-        	if [ ! -d src ]
+        	if [ ! -d ${SRCDIR} ]
         	then
-            		mkdir src
+            		mkdir ${SRCDIR}
         	fi
-		if [ ! -f src/buildroot-${BUILDROOTVER}.tar.bz2 ]
+		if [ ! -f ${SRCDIR}/buildroot-${BUILDROOTVER}.tar.bz2 ]
 		then
-			cd src
+			cd ${SRCDIR}
 			wget http://buildroot.uclibc.org/downloads/buildroot-${BUILDROOTVER}.tar.bz2
 		fi
-            cd src
+            cd ${SRCDIR}
         	wget http://download.filesystems.org/unionfs/unionfs-2.x-latest/${UNIONFSPATCH}.gz
-        	gunzip ${UNIONFSPATCH}.gz
-		;;
-	checklink)
-		checklink
-		echo "Link Ok"
 		;;
 	unpack)
 		if [ ! -f $BUILDROOTSRC ]
 		then
 			$0 get
 		fi
-		tar xvfj ${ROOTDIR}/src/buildroot-${BUILDROOTVER}.tar.bz2
+		tar xvfj ${SRCDIR}/buildroot-${BUILDROOTVER}.tar.bz2
 		mklink
-		;;
-	cpconfig)
-		cp -v ${ROOTDIR}/config/buildroot-${BUILDROOTVER}.config ${ROOTDIR}/buildroot-${BUILDROOTVER}/.config
+        gunzip ${SRCDIR}/${UNIONFSPATCH}.gz
+		cp -v ${CFGDIR}/buildroot-${BUILDROOTVER}.config ${ROOTDIR}/buildroot/.config
+        for pkg in ${PACKAGES}
+        do
+            cp -Rv ${PKGDIR}/${pkg} ${ROOTDIR}/buildroot/package
+        done
 		;;
 	backup)
-		cp -v ${ROOTDIR}/buildroot-${BUILDROOTVER}/.config ${ROOTDIR}/config/buildroot-${BUILDROOTVER}.config
+		cp -v ${ROOTDIR}/buildroot/.config ${ROOTDIR}/config/buildroot${BUILDROOTVER}.config
 		cp -v ${ROOTDIR}/buildroot/output/build/linux-${KERNELVER}/.config ${ROOTDIR}/config/linux-${KERNELVER}-alix-unionfs
-		;;
-	patch)
-		PATCH=${ROOTDIR}/src/unionfs-${UNIONFSVER}_for_${KERNELVER}.diff.gz
-		if [ ! -f ${PATCH} ]
-		then
-			echo "Cannot find ${PATCH}"
-			exit 1
-		else
-			cd ${ROOTDIR}/buildroot/output/build/linux-${KERNELVER}
-			zcat ${PATCH} | patch -p1
-		fi
 		;;
 	build)
 		let VERSION+=1

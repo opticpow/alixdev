@@ -1,0 +1,6 @@
+config BR2_PACKAGE_HEYU
+	bool "heyu"
+	help
+	  Heyu X10 software
+
+	  http://www.heyu.org

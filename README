@@ -1,1 +1,23 @@
-Copyright Wayne Ingram <wayne at ingram dot net dot au> 2012
+ALIXDEV is a package that builds firmware for PC Engine's ALIX Board.
+The firmware is targeted as a Home Automation Controller using
+X10 JeeNodes etc.
+
+Usage:
+
+./alixdev command
+
+Commands (Building):
+
+    unpack      uncompress buildroot source and copy in config file & custom packages
+    build       Compile Buildroot (make all)
+    makdefw     Create firmware tarball
+    runvm       Run firmware in qemu session
+
+Development:
+
+1. Work on a feature / fix
+2. Commit work
+3. Repeat 1-2
+4. Test
+5. Increment tag
+6. push to master
